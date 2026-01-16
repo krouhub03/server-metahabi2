@@ -18,10 +18,7 @@ interface NotificationQueueData {
 }
 
 const notificationQueue = new Queue<NotificationQueueData>('notification-queue', {
-    connection: {
-        host: connection.connection.options.host,
-        port: connection.connection.options.port,
-    },
+    connection: connection as any,
     defaultJobOptions: {
         attempts: 2,
         backoff: {
