@@ -9,7 +9,7 @@
     "test": "jest",
     "dev:server": "nodemon --watch src --ext ts --exec \"ts-node -r dotenv/config ./index.ts\"",
     "dev:worker": "nodemon --watch src --ext ts --exec \"ts-node -r dotenv/config src/worker.ts\"",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:worker\""
+    "dev": "concurrently \"npm run dev:server\" "
   },
   "repository": {
     "type": "git",
