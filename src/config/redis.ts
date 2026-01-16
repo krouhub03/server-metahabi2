@@ -1,6 +1,6 @@
 import IORedis, { RedisOptions } from 'ioredis';
 import dotenv from 'dotenv';
-
+import logger from './logger';
 dotenv.config();
 
 const host = process.env.REDIS_HOST || '212.85.23.27';
@@ -24,7 +24,11 @@ export const redisConfig: RedisOptions = {
 // 2. Exportamos la instancia (Connection) - Para tus logs o consultas directas
 export const connection = new IORedis(redisConfig);
 
-connection.on('connect', () => {
+connection.on('connect', (err) => {
+    logger.error('❌ Error de conexión en Redis:', { 
+        message: err.message, 
+        host: redisConfig.host 
+    });
     console.log(`✅ Redis Conectado a ${host}:${port}`);
 });
 
