@@ -1,0 +1,14 @@
+2026-01-16 15:10:51:1051 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:10:51.036Z 
+2026-01-16 15:10:51:1051 http: GET /api-docs 301 17.080 ms 
+2026-01-16 15:10:51:1051 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:10:51.107Z 
+2026-01-16 15:10:51:1051 http: GET /api-docs/ 200 17.506 ms 
+2026-01-16 15:10:51:1051 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:10:51.470Z 
+2026-01-16 15:10:51:1051 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:10:51.476Z 
+2026-01-16 15:10:51:1051 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:10:51.488Z 
+2026-01-16 15:10:51:1051 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:10:51.491Z 
+2026-01-16 15:10:51:1051 http: GET /api-docs/swagger-ui-init.js 200 1.450 ms 
+2026-01-16 15:10:51:1051 http: GET /api-docs/swagger-ui.css 200 53.547 ms 
+2026-01-16 15:10:51:1051 http: GET /api-docs/swagger-ui-standalone-preset.js 200 101.866 ms 
+2026-01-16 15:10:51:1051 http: GET /api-docs/swagger-ui-bundle.js 200 51.274 ms 
+2026-01-16 15:10:52:1052 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:10:52.413Z 
+2026-01-16 15:10:52:1052 http: GET /api-docs/favicon-32x32.png 200 7.196 ms 

@@ -1,0 +1,59 @@
+server-metahabi2/
+├── docs/
+│   └── tree_server.txt
+├── src/
+│   ├── config/
+│   │   ├── constants.ts
+│   │   ├── db.ts
+│   │   ├── logger.ts
+│   │   ├── nodemailer.ts
+│   │   ├── redis.ts
+│   │   ├── sentry.ts
+│   │   ├── swagger.ts
+│   │   └── vapid.ts
+│   ├── controllers/
+│   ├── jobs/
+│   ├── middleware/
+│   │   ├── auth.middleware.ts
+│   │   ├── cors.middleware.ts
+│   │   ├── error.middleware.ts
+│   │   ├── logger.middleware.ts
+│   │   ├── plan.middleware.ts
+│   │   ├── rateLimit.middleware.ts
+│   │   ├── timezone.middleware.ts
+│   │   └── validation.middleware.ts
+│   ├── models/
+│   │   ├── DailyFrog.model.ts
+│   │   ├── Goal.model.ts
+│   │   ├── Habit.model.ts
+│   │   ├── Identity.model.ts
+│   │   ├── PushSubscription.model.ts
+│   │   ├── SubGoal.model.ts
+│   │   ├── Task.model.ts
+│   │   ├── TaskCompletion.model.ts
+│   │   ├── User.model.ts
+│   │   └── index.ts
+│   ├── queues/
+│   ├── repositories/
+│   ├── routes/
+│   │   ├── auth.routes.ts
+│   │   ├── index.ts
+│   │   └── user.routes.ts
+│   ├── services/
+│   ├── tests/
+│   ├── utils/
+│   │   ├── logger.ts
+│   │   ├── notificationService.ts
+│   │   ├── responseErrors.ts
+│   │   ├── responseFormatter.ts
+│   │   └── tokens.ts
+│   ├── validators/
+│   ├── workers/
+│   ├── server.ts
+│   └── worker.ts
+├── README.md
+├── index.ts
+├── package-lock.json
+├── package.json
+├── tree_server.txt
+└── tsconfig.json

@@ -1,123 +1,94 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response, Express } from 'express';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Importaciones locales
+// Nota: Estos archivos deben ser convertidos a TS para que la importación no falle,
+// o debes tener un archivo de declaración (.d.ts) para ellos.
+import routes from './routes'; 
+import swaggerSpec from './config/swagger';
+import corsMiddleware from './middleware/cors.middleware'; 
+import loggerMiddleware from './middleware/logger.middleware';
+import timezoneMiddleware from './middleware/timezone.middleware';
+import { apiLimiter } from './middleware/rateLimit.middleware';
+import { ErrorHandler, notFoundHandler } from './utils/responseErrors';
+import { initSentry, Sentry } from './config/sentry'; // Importamos la config que hicimos antes
 
-// Middleware
+// Inicialización
+const app: Application = express();
+
+// ==========================================
+// 0. INICIALIZACIÓN DE SERVICIOS EXTERNOS
+// ==========================================
+
+// Inicializamos Sentry antes de los middlewares
+initSentry(app as unknown as Express);
+
+// ==========================================
+// 1. MIDDLEWARES GLOBALES
+// ==========================================
+
+// Seguridad HTTP
+app.use(helmet());
+
+// CORS (debe ir temprano)
+app.use(corsMiddleware);
+
+// IMPORTANTE: Si usas Nginx/Reverse Proxy (EasyPanel, Heroku, etc)
+// debes descomentar esto para que el Rate Limiter funcione con la IP real.
+// app.set('trust proxy', 1);
+
+// Parsing de JSON y URL-encoded
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// Middleware para manejar cookies
+app.use(cookieParser());
 
-// Logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
+// Middleware para manejar zonas horarias
+app.use(timezoneMiddleware);
 
-// Tipos
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+// Logging (Morgan/Winston)
+app.use(loggerMiddleware);
 
-// Base de datos simulada
-let users: User[] = [
-  { id: 1, name: 'Juan Pérez', email: 'juan@example.com' },
-  { id: 2, name: 'María García', email: 'maria@example.com' }
-];
+// Rate Limiting para rutas API
+app.use('/api', apiLimiter);
 
-// Rutas
+// ==========================================
+// 2. DOCUMENTACIÓN
+// ==========================================
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// ==========================================
+// 3. RUTAS
+// ==========================================
+
+// Health Check
 app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'API funcionando correctamente', version: '1.0.0' });
+    res.json({
+        message: 'Welcome to MetaHabit API v2.0 🚀',
+        status: 'online',
+        timestamp: new Date().toISOString()
+    });
 });
 
-// GET - Obtener todos los usuarios
-app.get('/api/users', (req: Request, res: Response) => {
-  res.json({ success: true, data: users });
-});
+// Rutas de la API
+app.use('/api', routes);
 
-// GET - Obtener un usuario por ID
-app.get('/api/users/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  const user = users.find(u => u.id === id);
-  
-  if (!user) {
-    return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  }
-  
-  res.json({ success: true, data: user });
-});
+// ==========================================
+// 4. MANEJO DE ERRORES (ORDEN CRÍTICO)
+// ==========================================
 
-// POST - Crear un nuevo usuario
-app.post('/api/users', (req: Request, res: Response) => {
-  const { name, email } = req.body;
-  
-  if (!name || !email) {
-    return res.status(400).json({ success: false, message: 'Nombre y email son requeridos' });
-  }
-  
-  const newUser: User = {
-    id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-    name,
-    email
-  };
-  
-  users.push(newUser);
-  res.status(201).json({ success: true, data: newUser });
-});
+// A. Sentry Error Handler (Debe ir ANTES de tus manejadores de errores personalizados)
+// Esto asegura que Sentry capture las excepciones antes de que tu ErrorHandler las formatee.
+Sentry.setupExpressErrorHandler(app);
 
-// PUT - Actualizar un usuario
-app.put('/api/users/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  const { name, email } = req.body;
-  const userIndex = users.findIndex(u => u.id === id);
-  
-  if (userIndex === -1) {
-    return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  }
-  
-  if (name) users[userIndex].name = name;
-  if (email) users[userIndex].email = email;
-  
-  res.json({ success: true, data: users[userIndex] });
-});
+// B. Middleware para rutas no encontradas (404)
+app.use(notFoundHandler);
 
-// DELETE - Eliminar un usuario
-app.delete('/api/users/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  const userIndex = users.findIndex(u => u.id === id);
-  
-  if (userIndex === -1) {
-    return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  }
-  
-  const deletedUser = users.splice(userIndex, 1)[0];
-  res.json({ success: true, message: 'Usuario eliminado', data: deletedUser });
-});
+// C. Middleware central de manejo de errores
+app.use(ErrorHandler);
 
-// Error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Error interno del servidor' });
-});
-
-// 404 handler
-app.use((req: Request, res: Response) => {
-  res.status(404).json({ success: false, message: 'Ruta no encontrada' });
-});
-
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-});
+export default app;

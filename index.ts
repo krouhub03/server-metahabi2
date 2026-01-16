@@ -1,123 +1,39 @@
-import express, { Request, Response, NextFunction } from 'express';
+import dotenv from 'dotenv';
+// Cargar variables de entorno lo antes posible
+dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+import app from './src/server';
+import { sequelize } from './src/config/db';
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Importamos los modelos para asegurar que Sequelize conozca las definiciones y relaciones
+// antes de hacer el sync(). Aunque app importa rutas que usan modelos, esto es más seguro.
+import './src/models'; 
 
-// CORS middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+const PORT = process.env.PORT || 5000;
 
-// Logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
+const startServer = async (): Promise<void> => {
+    try {
+        // 1. Verificar conexión a Base de Datos
+        await sequelize.authenticate();
+        console.log('✅ Conexión a MySQL establecida correctamente.');
 
-// Tipos
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+        // 2. Sincronizar Modelos
+        // En producción se recomienda usar migraciones (Umzug) en lugar de sync()
+        // alter: true intenta adaptar la tabla si hay cambios (cuidado en prod)
+        await sequelize.sync({ alter: false, force: false });
+        console.log('✅ Modelos sincronizados con la base de datos.');
 
-// Base de datos simulada
-let users: User[] = [
-  { id: 1, name: 'Juan Pérez', email: 'juan@example.com' },
-  { id: 2, name: 'María García', email: 'maria@example.com' }
-];
+        // 3. Arrancar el servidor
+        app.listen(PORT, () => {
+            console.log(`🚀 Servidor corriendo en modo ${process.env.NODE_ENV || 'development'} en el puerto ${PORT}`);
+            console.log(`🔗 API URL: http://localhost:${PORT}/api`);
+            console.log(`📄 Docs: http://localhost:${PORT}/api-docs`);
+        });
 
-// Rutas
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'API funcionando correctamente', version: '1.0.0' });
-});
+    } catch (error) {
+        console.error('❌ Error fatal al iniciar el servidor:', error);
+        process.exit(1);
+    }
+};
 
-// GET - Obtener todos los usuarios
-app.get('/api/users', (req: Request, res: Response) => {
-  res.json({ success: true, data: users });
-});
-
-// GET - Obtener un usuario por ID
-app.get('/api/users/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  const user = users.find(u => u.id === id);
-  
-  if (!user) {
-    return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  }
-  
-  res.json({ success: true, data: user });
-});
-
-// POST - Crear un nuevo usuario
-app.post('/api/users', (req: Request, res: Response) => {
-  const { name, email } = req.body;
-  
-  if (!name || !email) {
-    return res.status(400).json({ success: false, message: 'Nombre y email son requeridos' });
-  }
-  
-  const newUser: User = {
-    id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-    name,
-    email
-  };
-  
-  users.push(newUser);
-  res.status(201).json({ success: true, data: newUser });
-});
-
-// PUT - Actualizar un usuario
-app.put('/api/users/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  const { name, email } = req.body;
-  const userIndex = users.findIndex(u => u.id === id);
-  
-  if (userIndex === -1) {
-    return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  }
-  
-  if (name) users[userIndex].name = name;
-  if (email) users[userIndex].email = email;
-  
-  res.json({ success: true, data: users[userIndex] });
-});
-
-// DELETE - Eliminar un usuario
-app.delete('/api/users/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  const userIndex = users.findIndex(u => u.id === id);
-  
-  if (userIndex === -1) {
-    return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  }
-  
-  const deletedUser = users.splice(userIndex, 1)[0];
-  res.json({ success: true, message: 'Usuario eliminado', data: deletedUser });
-});
-
-// Error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Error interno del servidor' });
-});
-
-// 404 handler
-app.use((req: Request, res: Response) => {
-  res.status(404).json({ success: false, message: 'Ruta no encontrada' });
-});
-
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-});
+startServer();

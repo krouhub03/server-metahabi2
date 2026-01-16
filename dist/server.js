@@ -4,96 +4,73 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const helmet_1 = __importDefault(require("helmet"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+// Importaciones locales
+// Nota: Estos archivos deben ser convertidos a TS para que la importación no falle,
+// o debes tener un archivo de declaración (.d.ts) para ellos.
+const routes_1 = __importDefault(require("./routes"));
+const swagger_1 = __importDefault(require("./config/swagger"));
+const cors_middleware_1 = __importDefault(require("./middleware/cors.middleware"));
+const logger_middleware_1 = __importDefault(require("./middleware/logger.middleware"));
+const timezone_middleware_1 = __importDefault(require("./middleware/timezone.middleware"));
+const rateLimit_middleware_1 = require("./middleware/rateLimit.middleware");
+const responseErrors_1 = require("./utils/responseErrors");
+const sentry_1 = require("./config/sentry"); // Importamos la config que hicimos antes
+// Inicialización
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 3000;
-// Middleware
+// ==========================================
+// 0. INICIALIZACIÓN DE SERVICIOS EXTERNOS
+// ==========================================
+// Inicializamos Sentry antes de los middlewares
+(0, sentry_1.initSentry)(app);
+// ==========================================
+// 1. MIDDLEWARES GLOBALES
+// ==========================================
+// Seguridad HTTP
+app.use((0, helmet_1.default)());
+// CORS (debe ir temprano)
+app.use(cors_middleware_1.default);
+// IMPORTANTE: Si usas Nginx/Reverse Proxy (EasyPanel, Heroku, etc)
+// debes descomentar esto para que el Rate Limiter funcione con la IP real.
+// app.set('trust proxy', 1);
+// Parsing de JSON y URL-encoded
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-// CORS middleware
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
-// Logging middleware
-app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-    next();
-});
-// Base de datos simulada
-let users = [
-    { id: 1, name: 'Juan Pérez', email: 'juan@example.com' },
-    { id: 2, name: 'María García', email: 'maria@example.com' }
-];
-// Rutas
+// Middleware para manejar cookies
+app.use((0, cookie_parser_1.default)());
+// Middleware para manejar zonas horarias
+app.use(timezone_middleware_1.default);
+// Logging (Morgan/Winston)
+app.use(logger_middleware_1.default);
+// Rate Limiting para rutas API
+app.use('/api', rateLimit_middleware_1.apiLimiter);
+// ==========================================
+// 2. DOCUMENTACIÓN
+// ==========================================
+app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.default));
+// ==========================================
+// 3. RUTAS
+// ==========================================
+// Health Check
 app.get('/', (req, res) => {
-    res.json({ message: 'API funcionando correctamente', version: '1.0.0' });
+    res.json({
+        message: 'Welcome to MetaHabit API v2.0 🚀',
+        status: 'online',
+        timestamp: new Date().toISOString()
+    });
 });
-// GET - Obtener todos los usuarios
-app.get('/api/users', (req, res) => {
-    res.json({ success: true, data: users });
-});
-// GET - Obtener un usuario por ID
-app.get('/api/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const user = users.find(u => u.id === id);
-    if (!user) {
-        return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-    }
-    res.json({ success: true, data: user });
-});
-// POST - Crear un nuevo usuario
-app.post('/api/users', (req, res) => {
-    const { name, email } = req.body;
-    if (!name || !email) {
-        return res.status(400).json({ success: false, message: 'Nombre y email son requeridos' });
-    }
-    const newUser = {
-        id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-        name,
-        email
-    };
-    users.push(newUser);
-    res.status(201).json({ success: true, data: newUser });
-});
-// PUT - Actualizar un usuario
-app.put('/api/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const { name, email } = req.body;
-    const userIndex = users.findIndex(u => u.id === id);
-    if (userIndex === -1) {
-        return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-    }
-    if (name)
-        users[userIndex].name = name;
-    if (email)
-        users[userIndex].email = email;
-    res.json({ success: true, data: users[userIndex] });
-});
-// DELETE - Eliminar un usuario
-app.delete('/api/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const userIndex = users.findIndex(u => u.id === id);
-    if (userIndex === -1) {
-        return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-    }
-    const deletedUser = users.splice(userIndex, 1)[0];
-    res.json({ success: true, message: 'Usuario eliminado', data: deletedUser });
-});
-// Error handler
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ success: false, message: 'Error interno del servidor' });
-});
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: 'Ruta no encontrada' });
-});
-// Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-});
+// Rutas de la API
+app.use('/api', routes_1.default);
+// ==========================================
+// 4. MANEJO DE ERRORES (ORDEN CRÍTICO)
+// ==========================================
+// A. Sentry Error Handler (Debe ir ANTES de tus manejadores de errores personalizados)
+// Esto asegura que Sentry capture las excepciones antes de que tu ErrorHandler las formatee.
+sentry_1.Sentry.setupExpressErrorHandler(app);
+// B. Middleware para rutas no encontradas (404)
+app.use(responseErrors_1.notFoundHandler);
+// C. Middleware central de manejo de errores
+app.use(responseErrors_1.ErrorHandler);
+exports.default = app;
