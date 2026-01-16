@@ -5,13 +5,15 @@ dotenv.config();
 
 const host = process.env.REDIS_HOST || '212.85.23.27';
 const port = Number(process.env.REDIS_PORT) || 6379;
+const username = process.env.REDIS_USER || 'default'
+const password = process.env.REDIS_PASSWORD || process.env.REDIS_PASS
 
 // 1. Exportamos las opciones (Config) - Esto es lo que BullMQ prefiere
 export const redisConfig: RedisOptions = {
     host,
     port,
-    username: process.env.REDIS_USER || 'default',
-    password: process.env.REDIS_PASSWORD || process.env.REDIS_PASS,
+    username,
+    password,
     maxRetriesPerRequest: null, // OBLIGATORIO para BullMQ
     connectTimeout: 10000,
     retryStrategy(times: number) {
