@@ -16,3 +16,5 @@
 2026-01-16 15:17:38:1738 http: GET /api 404 70.218 ms 
 2026-01-16 15:17:38:1738 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-16T20:17:38.707Z 
 2026-01-16 15:17:38:1738 http: GET /favicon.ico 404 3.068 ms 
+2026-01-16 16:41:34:4134 debug: ✅ Conexión a MySQL establecida correctamente. 
+2026-01-16 16:41:37:4137 debug: ✅ Modelos sincronizados con la base de datos. 

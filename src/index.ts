@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import app from './src/server';
-import logger from './src/utils/logger';
-import { sequelize } from './src/config/db';
-import './src/models'; 
+import app from './server';
+import logger from './utils/logger';
+import { sequelize } from './config/db';
+import './models'; 
 
 // IMPORTANTE: Importa los workers aquí para que arranquen con el servidor
 
