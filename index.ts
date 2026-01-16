@@ -5,26 +5,28 @@ import app from './src/server';
 import { sequelize } from './src/config/db';
 import './src/models'; 
 
-// 1. IMPORTA LOS WORKERS AQUÍ
-// Esto activará los procesos de Email, Notification y Report al iniciar el servidor
-import './src/worker'; 
+// IMPORTANTE: Importa los workers aquí para que arranquen con el servidor
 
-const PORT = process.env.PORT || 5000;
+
+const PORT = process.env.PORT || 5002;
 
 const startServer = async (): Promise<void> => {
     try {
+        // Verificar conexión a Base de Datos
         await sequelize.authenticate();
         console.log('✅ Conexión a MySQL establecida correctamente.');
 
+        // Sincronizar Modelos
         await sequelize.sync({ alter: false, force: false });
         console.log('✅ Modelos sincronizados con la base de datos.');
 
+        // Arrancar el servidor
         app.listen(PORT, () => {
             console.log(`🚀 Servidor y Workers corriendo en puerto ${PORT}`);
         });
 
     } catch (error) {
-        console.error('❌ Error fatal al iniciar:', error);
+        console.error('❌ Error fatal al iniciar el servidor:', error);
         process.exit(1);
     }
 };
