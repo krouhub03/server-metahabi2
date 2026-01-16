@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/krouhub03/server-metahabi2/issues"
   },
-  "homepage": "https://github.com/krouhub03/server-metahabi2#readme"
+  "homepage": "https://github.com/krouhub03/server-metahabi2#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }
