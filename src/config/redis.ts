@@ -5,10 +5,10 @@ dotenv.config();
 
 const host = process.env.REDIS_HOST || '212.85.23.27';
 const port = Number(process.env.REDIS_PORT) || 6379;
-const username = process.env.REDIS_USER || 'default'
-const password = process.env.REDIS_PASSWORD || process.env.REDIS_PASS
+const username = process.env.REDIS_USER || 'default';
+const password = process.env.REDIS_PASSWORD || process.env.REDIS_PASS;
 
-// 1. Exportamos las opciones (Config) - Esto es lo que BullMQ prefiere
+// 1. Configuración de Redis
 export const redisConfig: RedisOptions = {
     host,
     port,
@@ -17,20 +17,28 @@ export const redisConfig: RedisOptions = {
     maxRetriesPerRequest: null, // OBLIGATORIO para BullMQ
     connectTimeout: 10000,
     retryStrategy(times: number) {
+        // Reintento incremental hasta un máximo de 2 segundos
         return Math.min(times * 50, 2000);
     }
 };
 
-// 2. Exportamos la instancia (Connection) - Para tus logs o consultas directas
+// 2. Crear la instancia de conexión
 export const connection = new IORedis(redisConfig);
 
-connection.on('connect', (err) => {
-    logger.error('❌ Error de conexión en Redis:', { 
-        message: err.message, 
-        host: redisConfig.host 
-    });
+// EVENTO DE ÉXITO: Se dispara cuando la conexión es correcta
+connection.on('connect', () => {
+    logger.info(`✅ Redis conectado exitosamente en ${host}:${port}`);
     console.log(`✅ Redis Conectado a ${host}:${port}`);
 });
 
-// Exportación por defecto para mantener compatibilidad
+// EVENTO DE ERROR: Se dispara cuando falla la conexión
+// Aquí es donde 'err' sí existe y tiene la propiedad 'message'
+connection.on('error', (err: any) => {
+    logger.error('❌ Error de conexión en Redis:', {
+        message: err?.message || 'Error desconocido',
+        host: redisConfig.host,
+        stack: err?.stack
+    });
+});
+
 export default connection;

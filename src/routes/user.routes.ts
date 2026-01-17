@@ -1,13 +1,10 @@
 import { Router } from 'express';
 
-import authMiddleware from '../middleware/auth.middleware';
-import {
-    validateUpdateProfile,
-    validateChangePassword
-} from '../validators/auth.validator';
-
 const router: Router = Router();
 
-router.post('/change-password', authMiddleware, validateChangePassword);
+router.get('/profile',(req , res)=>{res.json({tes:"hola mundo !"})})
+router.patch('/profile',(req , res)=>{res.json({tes:"hola mundo !"})})
+router.patch('/change-password',(req , res)=>{res.json({tes:"hola mundo !"})})
+
 
 export default router;

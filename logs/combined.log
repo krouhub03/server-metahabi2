@@ -137,3 +137,11 @@
 2026-01-16 19:50:28:5028 http: DELETE /pi/subgoals/695335c334814fb737294fde 404 1.515 ms 
 2026-01-16 19:52:16:5216 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-17T00:52:16.739Z 
 2026-01-16 19:52:16:5216 http: PUT /api/tasks/694f52ff3b44f8c43b220500/toggle 404 3.877 ms 
+2026-01-16 20:18:17:1817 debug: ✅ Conexión a MySQL establecida correctamente. 
+2026-01-16 20:18:19:1819 debug: ✅ Modelos sincronizados con la base de datos. 
+2026-01-16 20:19:50:1950 debug: ✅ Conexión a MySQL establecida correctamente. 
+2026-01-16 20:19:52:1952 debug: ✅ Modelos sincronizados con la base de datos. 
+2026-01-16 20:19:57:1957 debug: 🕒 Request procesada para Timezone: UTC | Server Time: 2026-01-17T01:19:57.638Z 
+2026-01-16 20:19:57:1957 http: GET /api 404 38.252 ms 
+2026-01-16 20:20:03:203 debug: 
+🛑 Cerrando workers... 
