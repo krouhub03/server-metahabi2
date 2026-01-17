@@ -53,7 +53,7 @@ app.use(timezoneMiddleware);
 app.use(loggerMiddleware);
 
 // Rate Limiting para rutas API
-app.use('/api', apiLimiter);
+app.use('/api',apiLimiter);
 
 // ==========================================
 // 2. DOCUMENTACIÓN
